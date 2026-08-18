@@ -1,1 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warehouse Inventory Counter</title>
 
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f2f5f7;
+    color:#17212b;
+}
+
+header{
+    background:#17324d;
+    color:white;
+    padding:18px 15px;
+    text-align:center;
+}
+
+header h1{
+    margin:0;
+    font-size:22px;
+}
+
+header p{
+    margin:6px 0 0;
+    font-size:13px;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+    padding:12px;
+}
+
+.card{
+    background:white;
+    border-radius:12px;
+    padding:14px;
+    margin-bottom:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,.10);
+}
+
+h2{
+    margin:0 0 12px;
+    font-size:18px;
+}
+
+input{
+    width:100%;
+    padding:14px;
+    border:1px solid #ccd5dc;
+    border-radius:8px;
+    font-size:16px;
+    outline:none;
+}
+
+input:focus{
+    border-color:#1976d2;
+}
+
+.search{
+    margin-bottom:10px;
+}
+
+.item-list{
+    max-height:430px;
+    overflow-y:auto;
+    border:1px solid #d8e0e6;
+    border-radius:8px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th{
+    background:#eaf0f5;
+    position:sticky;
+    top:0;
+    z-index:2;
+}
+
+th,td{
+    padding:10px 7px;
+    border-bottom:1px solid #e3e8ec;
+    text-align:left;
+    font-size:13px;
+}
+
+.item-row{
+    cursor:pointer;
+    touch-action:manipulation;
+}
+
+.item-row:hover,
+.item-row:active{
+    background:#dcefff;
+}
+
+.selected{
+    background:#c8e5ff !important;
+}
+
+.selected-box{
+    border:2px solid #1976d2;
+    border-radius:9px;
+    padding:12px;
+    background:#f5faff;
+}
+
+.selected-name{
+    font-size:17px;
+    font-weight:bold;
+}
+
+.selected-info{
+    margin-top:5px;
+    color:#596873;
+    font-size:13px;
+}
+
+.qty-area{
+    display:grid;
+    grid-template-columns:1fr 140px;
+    gap:8px;
+    margin-top:10px;
+}
+
+button{
+    border:0;
+    border-radius:8px;
+    padding:13px;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    min-height:46px;
+    touch-action:manipulation;
+}
+
+.add-count{
+    background:#1976d2;
+    color:white;
+}
+
+.green{
+    background:#198754;
+    color:white;
+}
+
+.red{
+    background:#d93636;
+    color:white;
+}
+
+.gray{
+    background:#e5ebf0;
+    color:#17212b;
+}
+
+.buttons{
+    display:flex;
+    gap:8px;
+    margin-top:9px;
+    flex-wrap:wrap;
+}
+
+.buttons button{
+    flex:1;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+    margin-bottom:12px;
+}
+
+.stat{
+    background:#f5f7f9;
+    border:1px solid #dce3e8;
+    border-radius:8px;
+    padding:10px;
+    text-align:center;
+    font-size:12px;
+}
+
+.stat strong{
+    display:block;
+    font-size:21px;
+    margin-top:4px;
+}
+
+.result-table{
+    overflow-x:auto;
+}
+
+.add-new{
+    border:2px dashed #aebdca;
+}
+
+.add-grid{
+    display:grid;
+    grid-template-columns:130px 1fr 180px;
+    gap:8px;
+}
+
+.empty{
+    text-align:center;
+    padding:20px;
+    color:#75838e;
+}
+
+@media(max-width:600px){
+
+    header h1{
+        font-size:20px;
+    }
+
+    .container{
+        padding:8px;
+    }
+
+    .card{
+        padding:11px;
+    }
+
+    .qty-area{
+        grid-template-columns:1fr;
+    }
+
+    .stats{
+        grid-template-columns:1fr 1fr 1fr;
+    }
+
+    .stat{
+        font-size:10px;
+        padding:8px 3px;
+    }
+
+    .stat strong{
+        font-size:18px;
+    }
+
+    th,td{
+        font-size:12px;
+        padding:9px 5px;
+    }
+
+    .add-grid{
+        grid-template-columns:1fr;
+    }
+
+    button{
+        font-size:14px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>📦 Warehouse Inventory Counter</h1>
+    <p>Search → Select → Enter Quantity → Add Count</p>
+</header>
+
+<div class="container">
+
+<!-- SEARCH -->
+<div class="card">
+
+<h2>🔎 Search Item</h2>
+
+<input
+    id="searchBox"
+    class="search"
+    type="search"
+    placeholder="Search item, code or size..."
+    autocomplete="off"
+>
+
+<div class="item-list">
+
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Item</th>
+<th>Size</th>
+</tr>
+</thead>
+
+<tbody id="itemList"></tbody>
+
+</table>
+
+</div>
+</div>
+
+
+<!-- SELECTED ITEM -->
+<div class="card">
+
+<h2>📋 Selected Item</h2>
+
+<div class="selected-box">
+
+<div id="selectedName" class="selected-name">
+No item selected
+</div>
+
+<div id="selectedInfo" class="selected-info">
+Tap an item from the list above.
+</div>
+
+</div>
+
+<div class="qty-area">
+
+<input
+    id="quantity"
+    type="number"
+    inputmode="decimal"
+    step="any"
+    placeholder="Enter counted quantity"
+>
+
+<button
+    class="add-count"
+    id="addCount"
+    type="button"
+>
+ADD COUNT
+</button>
+
+</div>
+
+<div class="buttons">
+
+<button
+    class="gray"
+    id="clearSelection"
+    type="button"
+>
+CLEAR SELECTION
+</button>
+
+<button
+    class="red"
+    id="clearAll"
+    type="button"
+>
+CLEAR ALL COUNTS
+</button>
+
+</div>
+
+</div>
+
+
+<!-- RESULT -->
+<div class="card">
+
+<h2>📊 Stock Result</h2>
+
+<div class="stats">
+
+<div class="stat">
+Items Counted
+<strong id="itemTotal">0</strong>
+</div>
+
+<div class="stat">
+Total Quantity
+<strong id="quantityTotal">0</strong>
+</div>
+
+<div class="stat">
+Master Items
+<strong id="masterTotal">35</strong>
+</div>
+
+</div>
+
+<div class="result-table">
+
+<table>
+
+<thead>
+<tr>
+<th>Code</th>
+<th>Item</th>
+<th>Size</th>
+<th>Quantity</th>
+<th></th>
+</tr>
+</thead>
+
+<tbody id="resultList"></tbody>
+
+</table>
+
+</div>
+
+<div class="buttons">
+
+<button
+    class="green"
+    id="excelButton"
+    type="button"
+>
+📥 EXCEL REPORT
+</button>
+
+<button
+    class="gray"
+    id="printButton"
+    type="button"
+>
+🖨 PRINT
+</button>
+
+</div>
+
+</div>
+
+
+<!-- ADD NEW ITEM -->
+<div class="card add-new">
+
+<h2>➕ Add New Item</h2>
+
+<div class="add-grid">
+
+<input
+    id="newCode"
+    placeholder="Item Code"
+>
+
+<input
+    id="newName"
+    placeholder="Item Name"
+>
+
+<input
+    id="newSize"
+    placeholder="Size"
+>
+
+</div>
+
+<div class="buttons">
+
+<button
+    class="add-count"
+    id="addNewItem"
+    type="button"
+>
+➕ ADD NEW ITEM
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* ================================
+   MASTER ITEM LIST
+================================ */
+
+const masterItems = [
+
+["001","YELLOW PVC 黄塑板","4x8x18MM"],
+["002","AFAQ LVSEN GREEN","4x8x18MM"],
+["003","SU-PLEX SUMA/KUWAIT","4x8x18MM"],
+["004","FEIYAWOOD 飞亚","4x8x18MM"],
+["005","LUCKY 1+1插接","DAMAGE"],
+["006","ALAHMAD 1","2x8x18MM"],
+["007","MENJIA GREEN PVC","2x8x18MM"],
+["008","ZAWJEET GREEN PVC","2x8x18MM"],
+["009","SULITER GREEN PVC","2x8x18MM"],
+["010","FEIYAWOOD","2x8x18MM"],
+["011","SU-PLEX SUMA/KUWAIT","2x8x18MM"],
+["012","ASAD GREEN PVC","2x8x18MM"],
+["013","HARDWOOD 全杂","4x8x15MM"],
+["014","DIAMOND BLACK 杨条 黑标 15","4x8x15MM"],
+["015","DIAMOND 杨条 黑标","4x8x12MM"],
+["016","PLATINUM BLACK 杨木 黑标","4x8x12MM"],
+["017","FEIYAWOOD 飞亚","4x8x12MM"],
+["018","AFAQ SULITER GREEN PVC 200*2440","200x2440x18MM"],
+["019","AFAQ SULITER GREEN PVC 300*2440","300x2440x18MM"],
+["020","AFAQ SULITER GREEN PVC 400*2440","400x2440x18MM"],
+["021","AFAQ LVSEN GREEN PVC 200*2440","200x2440x18MM"],
+["022","AFAQ LVSEN GREEN PVC 300*2440","300x2440x18MM"],
+["023","AFAQ LVSEN GREEN PVC 400*2440","400x2440x18MM"],
+["024","AL BADBAD","1000X2000X22MM"],
+["025","COMMERCIAL PLYWOOD 胶合板","4x8X4MM"],
+["026","COMMERCIAL PLYWOOD 胶合板","4X8X5MM"],
+["027","COMMERCIAL PLYWOOD 胶合板","4x8X6MM"],
+["028","COMMERCIAL PLYWOOD 胶合板","4x8x9MM"],
+["029","MDF-PROOF GREEN 防潮密度板","DAMAGE"],
+["030","MDF-PROOF WHITE 白色密度板","DAMAGE"],
+["031","AFAQ AL-TAWN WOODEN PLANK 塑板 WOS","38x225x3900"],
+["032","WOODEN PLANK OSHA STEEL 踢板带铁皮","38x225x2900"],
+["033","WOODEN PLANK OSHA STEEL 踢板带铁皮","38x225x3980"],
+["034","WOODEN PLANK 踢板","38x225x3980"],
+["035","WOODEN PLANK OSHA STEEL","38x225x5980"]
+
+];
+
+
+/* ================================
+   DATA
+================================ */
+
+let customItems =
+JSON.parse(
+localStorage.getItem("customWarehouseItems") || "[]"
+);
+
+let stock =
+JSON.parse(
+localStorage.getItem("warehouseStock") || "[]"
+);
+
+let selectedItem = null;
+
+
+/* ================================
+   ALL ITEMS
+================================ */
+
+function getAllItems(){
+
+    return masterItems.concat(customItems);
+
+}
+
+
+/* ================================
+   SAVE DATA
+================================ */
+
+function saveData(){
+
+    localStorage.setItem(
+        "customWarehouseItems",
+        JSON.stringify(customItems)
+    );
+
+    localStorage.setItem(
+        "warehouseStock",
+        JSON.stringify(stock)
+    );
+
+}
+
+
+/* ================================
+   ESCAPE HTML
+================================ */
+
+function safe(text){
+
+    return String(text)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+/* ================================
+   SHOW ITEMS
+================================ */
+
+function showItems(){
+
+    const search =
+    document.getElementById("searchBox")
+    .value
+    .toLowerCase()
+    .trim();
+
+    const list =
+    document.getElementById("itemList");
+
+    const items =
+    getAllItems().filter(function(item){
+
+        return (
+            item[0].toLowerCase().includes(search) ||
+            item[1].toLowerCase().includes(search) ||
+            item[2].toLowerCase().includes(search)
+        );
+
+    });
+
+
+    if(items.length === 0){
+
+        list.innerHTML =
+        '<tr><td colspan="3" class="empty">No item found</td></tr>';
+
+        return;
+
+    }
+
+
+    list.innerHTML = "";
+
+
+    items.forEach(function(item){
+
+        const row =
+        document.createElement("tr");
+
+        row.className = "item-row";
+
+
+        row.innerHTML =
+
+        "<td><b>" + safe(item[0]) + "</b></td>" +
+
+        "<td>" + safe(item[1]) + "</td>" +
+
+        "<td>" + safe(item[2]) + "</td>";
+
+
+        row.addEventListener(
+            "click",
+            function(){
+
+                selectItem(item,row);
+
+            }
+        );
+
+
+        list.appendChild(row);
+
+    });
+
+}
+
+
+/* ================================
+   SELECT ITEM
+================================ */
+
+function selectItem(item,row){
+
+    selectedItem = {
+
+        code:item[0],
+        name:item[1],
+        size:item[2]
+
+    };
+
+
+    document
+    .querySelectorAll(".item-row")
+    .forEach(function(r){
+
+        r.classList.remove("selected");
+
+    });
+
+
+    row.classList.add("selected");
+
+
+    document
+    .getElementById("selectedName")
+    .textContent = item[1];
+
+
+    document
+    .getElementById("selectedInfo")
+    .textContent =
+    "Code: " +
+    item[0] +
+    " | Size: " +
+    item[2];
+
+
+    document
+    .getElementById("quantity")
+    .focus();
+
+}
+
+
+/* ================================
+   ADD COUNT
+================================ */
+
+function addCount(){
+
+    if(!selectedItem){
+
+        alert("Please select an item first.");
+
+        return;
+
+    }
+
+
+    const quantityInput =
+    document.getElementById("quantity");
+
+
+    const quantity =
+    parseFloat(quantityInput.value);
+
+
+    if(isNaN(quantity)){
+
+        alert("Please enter quantity.");
+
+        quantityInput.focus();
+
+        return;
+
+    }
+
+
+    const existing =
+    stock.find(function(item){
+
+        return item.code === selectedItem.code;
+
+    });
+
+
+    if(existing){
+
+        existing.quantity =
+        Number(existing.quantity) + quantity;
+
+    }
+
+    else{
+
+        stock.push({
+
+            code:selectedItem.code,
+
+            name:selectedItem.name,
+
+            size:selectedItem.size,
+
+            quantity:quantity
+
+        });
+
+    }
+
+
+    saveData();
+
+    quantityInput.value = "";
+
+    showResults();
+
+}
+
+
+/* ================================
+   SHOW RESULT
+================================ */
+
+function showResults(){
+
+    const list =
+    document.getElementById("resultList");
+
+
+    if(stock.length === 0){
+
+        list.innerHTML =
+        '<tr><td colspan="5" class="empty">No stock counted yet.</td></tr>';
+
+    }
+
+    else{
+
+        list.innerHTML = "";
+
+
+        stock.forEach(function(item,index){
+
+            const row =
+            document.createElement("tr");
+
+
+            row.innerHTML =
+
+            "<td>" + safe(item.code) + "</td>" +
+
+            "<td>" + safe(item.name) + "</td>" +
+
+            "<td>" + safe(item.size) + "</td>" +
+
+            "<td><b>" +
+            Number(item.quantity).toLocaleString() +
+            "</b></td>" +
+
+            "<td></td>";
+
+
+            const deleteButton =
+            document.createElement("button");
+
+
+            deleteButton.className = "red";
+
+            deleteButton.textContent = "×";
+
+
+            deleteButton.onclick =
+            function(){
+
+                stock.splice(index,1);
+
+                saveData();
+
+                showResults();
+
+            };
+
+
+            row.lastElementChild
+            .appendChild(deleteButton);
+
+
+            list.appendChild(row);
+
+        });
+
+    }
+
+
+    let total = 0;
+
+
+    stock.forEach(function(item){
+
+        total += Number(item.quantity) || 0;
+
+    });
+
+
+    document
+    .getElementById("itemTotal")
+    .textContent = stock.length;
+
+
+    document
+    .getElementById("quantityTotal")
+    .textContent =
+    total.toLocaleString();
+
+}
+
+
+/* ================================
+   CLEAR SELECTION
+================================ */
+
+function clearSelection(){
+
+    selectedItem = null;
+
+
+    document
+    .getElementById("selectedName")
+    .textContent =
+    "No item selected";
+
+
+    document
+    .getElementById("selectedInfo")
+    .textContent =
+    "Tap an item from the list above.";
+
+
+    document
+    .getElementById("quantity")
+    .value = "";
+
+
+    document
+    .querySelectorAll(".item-row")
+    .forEach(function(row){
+
+        row.classList.remove("selected");
+
+    });
+
+}
+
+
+/* ================================
+   CLEAR ALL
+================================ */
+
+function clearAll(){
+
+    if(
+        !confirm(
+            "Are you sure you want to delete all counted stock?"
+        )
+    ){
+
+        return;
+
+    }
+
+
+    stock = [];
+
+    saveData();
+
+    showResults();
+
+}
+
+
+/* ================================
+   ADD NEW ITEM
+================================ */
+
+function addNewItem(){
+
+    const code =
+    document.getElementById("newCode")
+    .value
+    .trim();
+
+
+    const name =
+    document.getElementById("newName")
+    .value
+    .trim();
+
+
+    const size =
+    document.getElementById("newSize")
+    .value
+    .trim();
+
+
+    if(!code || !name || !size){
+
+        alert(
+            "Please enter Code, Item Name and Size."
+        );
+
+        return;
+
+    }
+
+
+    const exists =
+    getAllItems().some(function(item){
+
+        return item[0].toLowerCase() ===
+        code.toLowerCase();
+
+    });
+
+
+    if(exists){
+
+        alert(
+            "This item code already exists."
+        );
+
+        return;
+
+    }
+
+
+    customItems.push([
+        code,
+        name,
+        size
+    ]);
+
+
+    saveData();
+
+
+    document.getElementById("newCode").value="";
+    document.getElementById("newName").value="";
+    document.getElementById("newSize").value="";
+
+
+    document.getElementById("masterTotal")
+    if(document.getElementById("masterTotal")){
+        document.getElementById("masterTotal").textContent =
+        getAllItems().length;
+    }
+
+
+    showItems();
+
+
+    alert(
+        "New item added successfully."
+    );
+
+}
+
+
+/* ================================
+   EXCEL REPORT
+================================ */
+
+function createExcel(){
+
+    if(stock.length === 0){
+
+        alert(
+            "There is no stock to export."
+        );
+
+        return;
+
+    }
+
+
+    let csv =
+    "Code,Item,Size,Quantity\n";
+
+
+    stock.forEach(function(item){
+
+        csv +=
+        '"' +
+        String(item.code).replace(/"/g,'""') +
+        '","' +
+
+        String(item.name).replace(/"/g,'""') +
+        '","' +
+
+        String(item.size).replace(/"/g,'""') +
+        '",' +
+
+        item.quantity +
+
+        "\n";
+
+    });
+
+
+    let total = 0;
+
+
+    stock.forEach(function(item){
+
+        total += Number(item.quantity) || 0;
+
+    });
+
+
+    csv +=
+    '\n"","","TOTAL",' +
+    total +
+    '\n';
+
+
+    const blob =
+    new Blob(
+        ["\ufeff" + csv],
+        {
+            type:"text/csv;charset=utf-8;"
+        }
+    );
+
+
+    const url =
+    URL.createObjectURL(blob);
+
+
+    const link =
+    document.createElement("a");
+
+
+    link.href = url;
+
+    link.download =
+    "Warehouse_Inventory_Report.csv";
+
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+}
+
+
+/* ================================
+   BUTTONS
+================================ */
+
+document
+.getElementById("searchBox")
+.addEventListener(
+    "input",
+    showItems
+);
+
+
+document
+.getElementById("addCount")
+.addEventListener(
+    "click",
+    addCount
+);
+
+
+document
+.getElementById("quantity")
+.addEventListener(
+    "keydown",
+    function(event){
+
+        if(event.key === "Enter"){
+
+            addCount();
+
+        }
+
+    }
+);
+
+
+document
+.getElementById("clearSelection")
+.addEventListener(
+    "click",
+    clearSelection
+);
+
+
+document
+.getElementById("clearAll")
+.addEventListener(
+    "click",
+    clearAll
+);
+
+
+document
+.getElementById("addNewItem")
+.addEventListener(
+    "click",
+    addNewItem
+);
+
+
+document
+.getElementById("excelButton")
+.addEventListener(
+    "click",
+    createExcel
+);
+
+
+document
+.getElementById("printButton")
+.addEventListener(
+    "click",
+    function(){
+
+        window.print();
+
+    }
+);
+
+
+/* ================================
+   START
+================================ */
+
+showItems();
+
+showResults();
+
+</script>
+
+</body>
+</html>
